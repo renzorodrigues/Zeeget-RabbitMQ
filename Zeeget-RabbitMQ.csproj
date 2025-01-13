@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	<TargetFramework>net8.0</TargetFramework>
+	<ImplicitUsings>enable</ImplicitUsings>
+	<Nullable>enable</Nullable>
+	<OutputType>Library</OutputType>
+	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	<PackageId>Zeeget-RabbitMQ</PackageId>
+	<Version>1.0.0</Version>
+	<Authors>Renzo Rodrigues Santos</Authors>
+	<Company>ZEEGET SOLUTIONS</Company>
+	<Description>A modular RabbitMQ integration library for .NET applications.</Description>
+	<PackageLicenseExpression>MIT</PackageLicenseExpression>
+	<PackageTags>RabbitMQ Messaging .NET Modular</PackageTags>
+	<RepositoryUrl>https://github.com/renzorodrigues/RabbitMQCore</RepositoryUrl>
+	<RepositoryType>git</RepositoryType>
+	<PackageProjectUrl>https://github.com/renzorodrigues/RabbitMQCore</PackageProjectUrl>
+	<PackageReleaseNotes>Initial release with RabbitMQ integration features.</PackageReleaseNotes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
+    <PackageReference Include="Polly" Version="8.5.0" />
+    <PackageReference Include="RabbitMQ.Client" Version="7.0.0" />
+  </ItemGroup>
+
+</Project>
