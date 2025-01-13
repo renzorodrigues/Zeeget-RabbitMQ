@@ -13,9 +13,9 @@
 	<Description>A modular RabbitMQ integration library for .NET applications.</Description>
 	<PackageLicenseExpression>MIT</PackageLicenseExpression>
 	<PackageTags>RabbitMQ Messaging .NET Modular</PackageTags>
-	<RepositoryUrl>https://github.com/renzorodrigues/RabbitMQCore</RepositoryUrl>
+	<RepositoryUrl>https://github.com/renzorodrigues/Zeeget-RabbitMQ</RepositoryUrl>
 	<RepositoryType>git</RepositoryType>
-	<PackageProjectUrl>https://github.com/renzorodrigues/RabbitMQCore</PackageProjectUrl>
+	<PackageProjectUrl>https://github.com/renzorodrigues/Zeeget-RabbitMQ</PackageProjectUrl>
 	<PackageReleaseNotes>Initial release with RabbitMQ integration features.</PackageReleaseNotes>
   </PropertyGroup>
 
