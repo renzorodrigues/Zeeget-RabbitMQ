@@ -52,18 +52,21 @@ namespace Zeeget_RabbitMQ
 
             foreach (var handler in handlers)
             {
-                services.AddSingleton(handler);
-                services.AddHostedService(provider =>
+                if (handler != null)
                 {
-                    var consumer = provider.GetRequiredService<IMessageConsumer>();
-                    var eventHandler = (IEventHandler)provider.GetRequiredService(handler);
+                    services.AddSingleton(handler);
+                    services.AddHostedService(provider =>
+                    {
+                        var consumer = provider.GetRequiredService<IMessageConsumer>();
+                        var eventHandler = (IEventHandler)provider.GetRequiredService(handler);
 
-                    return new RabbitMQBackgroundService(
-                        consumer,
-                        eventHandler.QueueName,
-                        eventHandler.HandleMessageAsync
-                    );
-                });
+                        return new RabbitMQBackgroundService(
+                            consumer,
+                            eventHandler.QueueName,
+                            eventHandler.HandleMessageAsync
+                        );
+                    });
+                }                
             }
 
             return services;
