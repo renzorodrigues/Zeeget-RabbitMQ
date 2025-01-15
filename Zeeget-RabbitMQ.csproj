@@ -6,6 +6,7 @@
 	<Nullable>enable</Nullable>
 	<OutputType>Library</OutputType>
 	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 	<PackageId>Zeeget-RabbitMQ</PackageId>
 	<Version>1.0.0</Version>
 	<Authors>Renzo Rodrigues Santos</Authors>
@@ -20,6 +21,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
     <PackageReference Include="Polly" Version="8.5.0" />
     <PackageReference Include="RabbitMQ.Client" Version="7.0.0" />
