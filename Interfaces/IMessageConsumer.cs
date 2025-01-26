@@ -2,6 +2,6 @@
 {
     public interface IMessageConsumer
     {
-        Task ConsumeAsync(string queueName, Func<string, Task> onMessageReceived);
+        Task ConsumeAsync<TEvent>(string queueName, Func<TEvent, Task> onMessageReceived);
     }
 }

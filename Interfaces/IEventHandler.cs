@@ -1,8 +1,8 @@
 ﻿namespace Zeeget_RabbitMQ.Interfaces
 {
-    public interface IEventHandler
+    public interface IEventHandler<TEvent>
     {
         string QueueName { get; }
-        Task HandleMessageAsync(string message);
+        Task HandleMessageAsync(TEvent message);
     }
 }

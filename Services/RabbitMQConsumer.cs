@@ -1,7 +1,8 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Text;
+using System.Text.Json;
+using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using System.Text;
 using Zeeget_RabbitMQ.Interfaces;
 using Zeeget_RabbitMQ.Models;
 
@@ -11,7 +12,6 @@ namespace Zeeget_RabbitMQ.Services
     {
         private readonly ConnectionFactory _factory;
         private readonly ILogger<RabbitMQConsumer> _logger;
-        private readonly RabbitMQSettings _settings;
         private readonly string _modulePrefix;
 
         public RabbitMQConsumer(
@@ -20,7 +20,6 @@ namespace Zeeget_RabbitMQ.Services
             string modulePrefix
         )
         {
-            _settings = settings;
             _logger = logger;
             _modulePrefix = modulePrefix;
             _factory = new ConnectionFactory
@@ -33,7 +32,7 @@ namespace Zeeget_RabbitMQ.Services
             };
         }
 
-        public async Task ConsumeAsync(string queueName, Func<string, Task> onMessageReceived)
+        public async Task ConsumeAsync<TEvent>(string queueName, Func<TEvent, Task> onMessageReceived)
         {
             var connection = await _factory.CreateConnectionAsync();
             var channel = await connection.CreateChannelAsync();
@@ -53,14 +52,27 @@ namespace Zeeget_RabbitMQ.Services
                 try
                 {
                     var body = ea.Body.ToArray();
-                    var message = Encoding.UTF8.GetString(body);
+                    var messageString = Encoding.UTF8.GetString(body);
 
                     _logger.LogInformation(
                         "Message received from queue {QueueName}.",
                         prefixedQueueName
                     );
 
-                    await onMessageReceived(message);
+                    // Deserialize the message
+                    var message = JsonSerializer.Deserialize<TEvent>(messageString);
+
+                    if (message is not null)
+                    {
+                        await onMessageReceived(message);
+                    }
+                    else
+                    {
+                        _logger.LogWarning(
+                            "Message from queue {QueueName} could not be deserialized.",
+                            prefixedQueueName
+                        );
+                    }
                 }
                 catch (Exception ex)
                 {

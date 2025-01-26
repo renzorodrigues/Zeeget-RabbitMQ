@@ -3,16 +3,16 @@ using Zeeget_RabbitMQ.Interfaces;
 
 namespace Zeeget_RabbitMQ.Services
 {
-    public class RabbitMQBackgroundService : BackgroundService
+    public class RabbitMQBackgroundService<TEvent> : BackgroundService
     {
         private readonly IMessageConsumer _consumer;
         private readonly string _queueName;
-        private readonly Func<string, Task> _onMessageReceived;
+        private readonly Func<TEvent, Task> _onMessageReceived;
 
         public RabbitMQBackgroundService(
             IMessageConsumer consumer,
             string queueName,
-            Func<string, Task> onMessageReceived
+            Func<TEvent, Task> onMessageReceived
         )
         {
             _consumer = consumer;
@@ -23,7 +23,7 @@ namespace Zeeget_RabbitMQ.Services
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             // Listen to the specified queue
-            await _consumer.ConsumeAsync(
+            await _consumer.ConsumeAsync<TEvent>(
                 _queueName,
                 async (message) =>
                 {

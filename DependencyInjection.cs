@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Zeeget_RabbitMQ.Interfaces;
 using Zeeget_RabbitMQ.Models;
@@ -15,9 +16,11 @@ namespace Zeeget_RabbitMQ
             Action<RabbitMQSettings> configureSettings
         )
         {
+            // Configurar as opções de RabbitMQ
             var settings = new RabbitMQSettings();
             configureSettings(settings);
 
+            // Registrar as dependências principais
             services.AddSingleton(settings);
             services.AddSingleton<IMessagePublisher>(provider =>
             {
@@ -30,8 +33,8 @@ namespace Zeeget_RabbitMQ
                 return new RabbitMQConsumer(settings, logger, moduleName);
             });
 
-            // Discover and register event handlers
-            var handlerType = typeof(IEventHandler);
+            // Descobrir e registrar os Event Handlers genéricos
+            var handlerType = typeof(IEventHandler<>); // Interface genérica base
             var handlers = AppDomain
                 .CurrentDomain.GetAssemblies()
                 .Where(assembly => !assembly.IsDynamic)
@@ -47,26 +50,73 @@ namespace Zeeget_RabbitMQ
                     }
                 })
                 .Where(type =>
-                    handlerType.IsAssignableFrom(type) && !type.IsInterface && !type.IsAbstract
+                    type!
+                        .GetInterfaces()
+                        .Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == handlerType)
+                    && !type.IsInterface
+                    && !type.IsAbstract
                 );
 
             foreach (var handler in handlers)
             {
                 if (handler != null)
                 {
-                    services.AddSingleton(handler);
-                    services.AddHostedService(provider =>
-                    {
-                        var consumer = provider.GetRequiredService<IMessageConsumer>();
-                        var eventHandler = (IEventHandler)provider.GetRequiredService(handler);
-
-                        return new RabbitMQBackgroundService(
-                            consumer,
-                            eventHandler.QueueName,
-                            eventHandler.HandleMessageAsync
+                    // Determinar o tipo genérico do handler (T)
+                    var eventHandlerInterface = handler
+                        .GetInterfaces()
+                        .FirstOrDefault(i =>
+                            i.IsGenericType && i.GetGenericTypeDefinition() == handlerType
                         );
-                    });
-                }                
+                    var messageType =
+                        (eventHandlerInterface?.GetGenericArguments().FirstOrDefault())
+                        ?? throw new InvalidOperationException(
+                            $"Handler {handler.Name} does not implement IEventHandler<T> with a valid generic type."
+                        );
+
+                    // Registrar o handler
+                    services.AddSingleton(handler);
+
+                    // Registrar o BackgroundService dinamicamente
+                    services.AddSingleton(
+                        typeof(IHostedService),
+                        provider =>
+                        {
+                            var consumer = provider.GetRequiredService<IMessageConsumer>();
+                            var eventHandler = provider.GetRequiredService(handler);
+
+                            // Obter propriedades necessárias
+                            var queueNameProperty =
+                                handler.GetProperty("QueueName")
+                                ?? throw new InvalidOperationException(
+                                    $"Handler {handler.Name} does not have a QueueName property."
+                                );
+                            var queueName = (string)queueNameProperty.GetValue(eventHandler)!;
+                            var handleMessageAsyncMethod =
+                                handler.GetMethod("HandleMessageAsync")
+                                ?? throw new InvalidOperationException(
+                                    $"Handler {handler.Name} does not implement HandleMessageAsync."
+                                );
+
+                            // Criar o BackgroundService dinamicamente
+                            var backgroundServiceType =
+                                typeof(RabbitMQBackgroundService<>).MakeGenericType(messageType);
+
+                            return Activator.CreateInstance(
+                                backgroundServiceType,
+                                consumer,
+                                queueName,
+                                (Func<object, Task>)(
+                                    message =>
+                                        (Task)
+                                            handleMessageAsyncMethod.Invoke(
+                                                eventHandler,
+                                                [message]
+                                            )!
+                                )
+                            )!;
+                        }
+                    );
+                }
             }
 
             return services;
