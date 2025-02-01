@@ -30,7 +30,7 @@ namespace Zeeget_RabbitMQ
             services.AddSingleton<IMessageConsumer>(provider =>
             {
                 var logger = provider.GetRequiredService<ILogger<RabbitMQConsumer>>();
-                return new RabbitMQConsumer(settings, logger, moduleName);
+                return new RabbitMQConsumer(settings, logger);
             });
 
             // Descobrir e registrar os Event Handlers genéricos
